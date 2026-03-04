@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TradingSim.Api/TradingSim.Api.csproj" />
+    <Project Path="src/TradingSim.Application/TradingSim.Application.csproj" />
+    <Project Path="src/TradingSim.Domain/TradingSim.Domain.csproj" />
+    <Project Path="src/TradingSim.Infrastructure/TradingSim.Infrastructure.csproj" />
+  </Folder>
+</Solution>

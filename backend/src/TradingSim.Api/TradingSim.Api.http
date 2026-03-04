@@ -1,0 +1,6 @@
+@TradingSim.Api_HostAddress = http://localhost:5196
+
+GET {{TradingSim.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
