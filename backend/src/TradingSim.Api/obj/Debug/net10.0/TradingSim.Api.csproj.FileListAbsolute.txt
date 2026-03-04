@@ -46,3 +46,12 @@ E:\MTS\backend\src\TradingSim.Api\obj\Debug\net10.0\swae.build.ex.cache
 E:\MTS\backend\src\TradingSim.Api\obj\Debug\net10.0\TradingSim.Api.dll
 E:\MTS\backend\src\TradingSim.Api\obj\Debug\net10.0\refint\TradingSim.Api.dll
 E:\MTS\backend\src\TradingSim.Api\obj\Debug\net10.0\TradingSim.Api.pdb
+E:\MTS\backend\src\TradingSim.Api\bin\Debug\net10.0\appsettings.Development.json
+E:\MTS\backend\src\TradingSim.Api\bin\Debug\net10.0\appsettings.json
+E:\MTS\backend\src\TradingSim.Api\bin\Debug\net10.0\TradingSim.Api.staticwebassets.endpoints.json
+E:\MTS\backend\src\TradingSim.Api\bin\Debug\net10.0\TradingSim.Api.deps.json
+E:\MTS\backend\src\TradingSim.Api\bin\Debug\net10.0\TradingSim.Api.runtimeconfig.json
+E:\MTS\backend\src\TradingSim.Api\bin\Debug\net10.0\TradingSim.Api.pdb
+E:\MTS\backend\src\TradingSim.Api\obj\Debug\net10.0\TradingS.740D0D79.Up2Date
+E:\MTS\backend\src\TradingSim.Api\obj\Debug\net10.0\TradingSim.Api.genruntimeconfig.cache
+E:\MTS\backend\src\TradingSim.Api\obj\Debug\net10.0\ref\TradingSim.Api.dll

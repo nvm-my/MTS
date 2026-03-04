@@ -35,7 +35,7 @@ public static class DependencyInjection
         services.AddSingleton<IMatchingEngine, MatchingEngineAdapter>();
 
         // Seed + startup load
-        services.AddSingleton<SeedData>();
+        //services.AddSingleton<SeedData>();
         services.AddHostedService<StartupLoader>();
 
         return services;
