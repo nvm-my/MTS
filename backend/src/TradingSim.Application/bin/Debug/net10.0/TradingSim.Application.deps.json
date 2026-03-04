@@ -8,8 +8,7 @@
     ".NETCoreApp,Version=v10.0": {
       "TradingSim.Application/1.0.0": {
         "dependencies": {
-          "TradingSim.Domain": "1.0.0",
-          "TradingSim.Infrastructure": "1.0.0"
+          "TradingSim.Domain": "1.0.0"
         },
         "runtime": {
           "TradingSim.Application.dll": {}
@@ -80,20 +79,11 @@
         }
       },
       "TradingSim.Domain/1.0.0": {
-        "runtime": {
-          "TradingSim.Domain.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
-        }
-      },
-      "TradingSim.Infrastructure/1.0.0": {
         "dependencies": {
-          "MongoDB.Driver": "3.7.0",
-          "TradingSim.Domain": "1.0.0"
+          "MongoDB.Driver": "3.7.0"
         },
         "runtime": {
-          "TradingSim.Infrastructure.dll": {
+          "TradingSim.Domain.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
           }
@@ -157,11 +147,6 @@
       "hashPath": "zstdsharp.port.0.7.3.nupkg.sha512"
     },
     "TradingSim.Domain/1.0.0": {
-      "type": "project",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "TradingSim.Infrastructure/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

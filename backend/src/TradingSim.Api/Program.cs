@@ -1,41 +1,81 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using TradingSim.Api.Middleware;
+using TradingSim.Application.UseCases.Auth;
+using TradingSim.Application.UseCases.Instruments;
+using TradingSim.Application.UseCases.Orders;
+using TradingSim.Application.UseCases.Trades;
+using TradingSim.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Controllers + Swagger
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Infrastructure (Mongo, repos, jwt, engine, seed)
+builder.Services.AddInfrastructure(builder.Configuration);
+// Use cases
+builder.Services.AddScoped<SignupUseCase>();
+builder.Services.AddScoped<LoginUseCase>();
+builder.Services.AddScoped<CreateInstrumentUseCase>();
+builder.Services.AddScoped<ListInstrumentsUseCase>();
+builder.Services.AddScoped<PlaceOrderUseCase>();
+builder.Services.AddScoped<CancelOrderUseCase>();
+builder.Services.AddScoped<ListOpenOrdersUseCase>();
+builder.Services.AddScoped<GetMyTradesUseCase>();
+builder.Services.AddScoped<GetAllTradesUseCase>();
+
+// JWT Auth
+var jwtKey = builder.Configuration["Jwt:Key"]!;
+var issuer = builder.Configuration["Jwt:Issuer"]!;
+var audience = builder.Configuration["Jwt:Audience"]!;
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = issuer,
+            ValidAudience = audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// CORS for React dev server
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("dev", p =>
+        p.AllowAnyHeader()
+         .AllowAnyMethod()
+         .AllowCredentials()
+         .SetIsOriginAllowed(_ => true));
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+// Middleware
+app.UseMiddleware<ExceptionMiddleware>();
 
-app.UseHttpsRedirection();
+app.UseSwagger();
+app.UseSwaggerUI();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.UseCors("dev");
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
