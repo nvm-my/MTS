@@ -7,26 +7,40 @@ export default function MyOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  async function load() {
+  async function load(mountedRef?: { current: boolean }) {
     try {
       setErr(null);
+      setLoading(true);
       const data = await getOpenOrders();
-      setOrders(data);
+      if (!mountedRef || mountedRef.current) setOrders(data);
     } catch (ex: any) {
-      setErr(ex?.response?.data?.error ?? "Failed to load orders");
+      if (!mountedRef || mountedRef.current) {
+        setErr(ex?.response?.data?.error ?? "Failed to load orders");
+      }
+    } finally {
+      if (!mountedRef || mountedRef.current) setLoading(false);
     }
   }
 
   useEffect(() => {
-    load();
+    const mountedRef = { current: true };
+    load(mountedRef);
+
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   async function onCancel(id: string) {
+    if (busyId) return; // already cancelling something
     setBusyId(id);
+    setErr(null);
+
     try {
       await cancelOrder(id);
-      await load();
+      await load(); // refresh list
     } catch (ex: any) {
       setErr(ex?.response?.data?.error ?? "Cancel failed");
     } finally {
@@ -42,6 +56,7 @@ export default function MyOrdersPage() {
       </div>
 
       {err && <div style={{ color: "crimson" }}>{err}</div>}
+      {loading && <div>Loading orders...</div>}
 
       <table className="table">
         <thead>
@@ -56,10 +71,13 @@ export default function MyOrdersPage() {
             <th></th>
           </tr>
         </thead>
+
         <tbody>
           {orders.map((o) => (
             <tr key={o.id}>
-              <td><span className="badge">{o.symbol}</span></td>
+              <td>
+                <span className="badge">{o.symbol}</span>
+              </td>
               <td>{o.side}</td>
               <td>{o.type}</td>
               <td>{o.quantity}</td>
@@ -67,13 +85,18 @@ export default function MyOrdersPage() {
               <td>{o.limitPrice ?? "-"}</td>
               <td>{o.status}</td>
               <td>
-                <button className="btn" disabled={busyId === o.id} onClick={() => onCancel(o.id)}>
+                <button
+                  className="btn"
+                  disabled={loading || busyId === o.id}
+                  onClick={() => onCancel(o.id)}
+                >
                   {busyId === o.id ? "Cancelling..." : "Cancel"}
                 </button>
               </td>
             </tr>
           ))}
-          {orders.length === 0 && (
+
+          {!loading && orders.length === 0 && (
             <tr>
               <td colSpan={8}>No open orders</td>
             </tr>

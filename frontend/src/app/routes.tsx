@@ -3,11 +3,13 @@ import ProtectedRoute from "../components/common/protectedRoute";
 
 import LoginPage from "../pages/auth/LoginPage";
 import SignupPage from "../pages/auth/SignupPage";
+
 import ClientDashboard from "../pages/client/ClientDashboard";
-import AdminDashboard from "../pages/admin/AdminDashboard";
 import PlaceOrderPage from "../pages/client/PlaceOrderPage";
 import MyOrdersPage from "../pages/client/MyOrdersPage";
 import MyTradesPage from "../pages/client/MyTradesPage";
+
+import AdminDashboard from "../pages/admin/AdminDashboard";
 import InstrumentsAdminPage from "../pages/admin/InstrumentsAdminPage";
 import AllTradesPage from "../pages/admin/AllTradesPage";
 
@@ -15,6 +17,7 @@ export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/signup", element: <SignupPage /> },
 
+  // Home (both roles allowed)
   {
     path: "/",
     element: (
@@ -24,7 +27,7 @@ export const router = createBrowserRouter([
     ),
   },
 
-  // Client
+  // Client-only routes (matches backend: Orders + Trades/me)
   {
     path: "/client/place-order",
     element: (
@@ -50,7 +53,7 @@ export const router = createBrowserRouter([
     ),
   },
 
-  // Admin
+  // Admin-only routes (matches backend: Instruments POST + Trades GET)
   {
     path: "/admin",
     element: (

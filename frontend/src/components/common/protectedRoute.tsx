@@ -1,14 +1,26 @@
 import { Navigate } from "react-router-dom";
-import { getRole, getToken } from "../../app/auth.store";
+import { getRole, isAuthenticated } from "../../app/auth.store";
 import type { UserRole } from "../../types/auth";
 import type { JSX } from "react";
 
-export default function ProtectedRoute(props: { children: JSX.Element; allow: UserRole[] }) {
-  const token = getToken();
+type Props = {
+  children: JSX.Element;
+  allow: UserRole[];
+};
+
+export default function ProtectedRoute({ children, allow }: Props) {
+  const authenticated = isAuthenticated();
   const role = getRole();
 
-  if (!token || !role) return <Navigate to="/login" replace />;
-  if (!props.allow.includes(role)) return <Navigate to="/" replace />;
+  // Not logged in → go to login page
+  if (!authenticated || !role) {
+    return <Navigate to="/login" replace />;
+  }
 
-  return props.children;
+  // Logged in but role not allowed
+  if (!allow.includes(role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
 }

@@ -12,13 +12,34 @@ export default function InstrumentsAdminPage() {
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
+  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+
   async function load() {
-    const data = await getInstruments();
-    setItems(data);
+    try {
+      setErr(null);
+      setLoading(true);
+      const data = await getInstruments();
+      setItems(data);
+    } catch (ex: any) {
+      setErr(ex?.response?.data?.error ?? "Failed to load instruments");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
-    load().catch(() => {});
+    let mounted = true;
+
+    (async () => {
+      await load();
+    })();
+
+    return () => {
+      mounted = false;
+      void mounted;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function onCreate(e: React.FormEvent) {
@@ -26,15 +47,37 @@ export default function InstrumentsAdminPage() {
     setErr(null);
     setMsg(null);
 
+    const s = symbol.trim().toUpperCase();
+    const n = name.trim();
+
+    if (!s) {
+      setErr("Symbol is required");
+      return;
+    }
+    if (!n) {
+      setErr("Name is required");
+      return;
+    }
+    if (!Number.isFinite(price) || price <= 0) {
+      setErr("Last price must be greater than 0");
+      return;
+    }
+
     try {
-      const res = await createInstrument({ symbol, name, lastPrice: price });
+      setCreating(true);
+
+      const res = await createInstrument({ symbol: s, name: n, lastPrice: price });
       setMsg(res.message);
+
       setSymbol("");
       setName("");
       setPrice(100);
+
       await load();
     } catch (ex: any) {
       setErr(ex?.response?.data?.error ?? "Create failed");
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -51,27 +94,47 @@ export default function InstrumentsAdminPage() {
         <div className="row">
           <div style={{ flex: 1, minWidth: 180 }}>
             <label>Symbol</label>
-            <input className="input" value={symbol} onChange={(e) => setSymbol(e.target.value)} />
+            <input
+              className="input"
+              value={symbol}
+              onChange={(e) => setSymbol(e.target.value)}
+              placeholder="e.g. AAPL"
+            />
           </div>
+
           <div style={{ flex: 2, minWidth: 220 }}>
             <label>Name</label>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
+            <input
+              className="input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Apple Inc."
+            />
           </div>
+
           <div style={{ width: 180 }}>
             <label>Last Price</label>
-            <input className="input" type="number" step="0.01" value={price} onChange={(e) => setPrice(Number(e.target.value))} />
+            <input
+              className="input"
+              type="number"
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(Number(e.target.value))}
+            />
           </div>
         </div>
 
         {err && <div style={{ marginTop: 10, color: "crimson" }}>{err}</div>}
         {msg && <div style={{ marginTop: 10, color: "green" }}>{msg}</div>}
 
-        <button className="btn" style={{ marginTop: 12 }} type="submit">
-          Create
+        <button className="btn" style={{ marginTop: 12 }} type="submit" disabled={creating}>
+          {creating ? "Creating..." : "Create"}
         </button>
       </form>
 
       <h3>Current Instruments</h3>
+      {loading && <div>Loading instruments...</div>}
+
       <table className="table">
         <thead>
           <tr>
@@ -83,11 +146,18 @@ export default function InstrumentsAdminPage() {
         <tbody>
           {items.map((i) => (
             <tr key={i.id}>
-              <td><span className="badge">{i.symbol}</span></td>
+              <td>
+                <span className="badge">{i.symbol}</span>
+              </td>
               <td>{i.name}</td>
               <td>{i.lastPrice}</td>
             </tr>
           ))}
+          {!loading && items.length === 0 && (
+            <tr>
+              <td colSpan={3}>No instruments</td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

@@ -5,3 +5,5 @@ export type Trade = {
   quantity: number;
   executedUtc: string;
 };
+
+export type TradeSide = "Buy" | "Sell";

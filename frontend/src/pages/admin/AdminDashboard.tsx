@@ -1,12 +1,19 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { clearAuth } from "../../app/auth.store";
 
 export default function AdminDashboard() {
+  const nav = useNavigate();
+
+  function onLogout() {
+    clearAuth();
+    nav("/login", { replace: true });
+  }
+
   return (
     <div className="container">
       <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
         <h2>Admin Dashboard</h2>
-        <button className="btn" onClick={() => { clearAuth(); location.href = "/login"; }}>
+        <button className="btn" onClick={onLogout}>
           Logout
         </button>
       </div>

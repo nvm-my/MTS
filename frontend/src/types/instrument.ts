@@ -10,3 +10,7 @@ export type CreateInstrumentRequest = {
   name: string;
   lastPrice: number;
 };
+
+export type CreateInstrumentResponse = {
+  message: string;
+};

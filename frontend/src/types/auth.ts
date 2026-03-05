@@ -11,6 +11,10 @@ export type SignupRequest = {
   password: string;
 };
 
+export type SignupResponse = {
+  message: string;
+};
+
 export type LoginRequest = {
   email: string;
   password: string;

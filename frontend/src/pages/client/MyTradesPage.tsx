@@ -3,20 +3,36 @@ import { Link } from "react-router-dom";
 import { getMyTrades } from "../../api/trades.api";
 import type { Trade } from "../../types/trade";
 
+function formatUtc(iso: string) {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso : d.toISOString();
+}
+
 export default function MyTradesPage() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
     (async () => {
       try {
         setErr(null);
+        setLoading(true);
+
         const data = await getMyTrades();
-        setTrades(data);
+        if (mounted) setTrades(data);
       } catch (ex: any) {
-        setErr(ex?.response?.data?.error ?? "Failed to load trades");
+        if (mounted) setErr(ex?.response?.data?.error ?? "Failed to load trades");
+      } finally {
+        if (mounted) setLoading(false);
       }
     })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -27,6 +43,7 @@ export default function MyTradesPage() {
       </div>
 
       {err && <div style={{ color: "crimson" }}>{err}</div>}
+      {loading && <div>Loading trades...</div>}
 
       <table className="table">
         <thead>
@@ -40,13 +57,16 @@ export default function MyTradesPage() {
         <tbody>
           {trades.map((t) => (
             <tr key={t.id}>
-              <td><span className="badge">{t.symbol}</span></td>
+              <td>
+                <span className="badge">{t.symbol}</span>
+              </td>
               <td>{t.price}</td>
               <td>{t.quantity}</td>
-              <td>{new Date(t.executedUtc).toISOString()}</td>
+              <td>{formatUtc(t.executedUtc)}</td>
             </tr>
           ))}
-          {trades.length === 0 && (
+
+          {!loading && trades.length === 0 && (
             <tr>
               <td colSpan={4}>No trades yet</td>
             </tr>

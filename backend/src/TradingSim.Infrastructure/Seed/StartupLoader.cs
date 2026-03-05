@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TradingSim.Application.Interfaces.Repositories;
 using TradingSim.Application.Interfaces.Services;
@@ -12,22 +13,32 @@ namespace TradingSim.Infrastructure.Seed;
 public sealed class StartupLoader : IHostedService
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<StartupLoader> _logger;
 
-    public StartupLoader(IServiceScopeFactory scopeFactory)
+    public StartupLoader(IServiceScopeFactory scopeFactory, ILogger<StartupLoader> logger)
     {
         _scopeFactory = scopeFactory;
+        _logger = logger;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         using var scope = _scopeFactory.CreateScope();
 
-        // Seed instruments
         var mongo = scope.ServiceProvider.GetRequiredService<MongoContext>();
-        await SeedData.SeedAsync(mongo.Db);
+        _logger.LogInformation("Seeding instruments into DB: {DbName}", mongo.Db.DatabaseNamespace.DatabaseName);
 
-        // Seed admin user
+        await SeedData.SeedAsync(mongo.Db);
+        _logger.LogInformation("Instrument seeding completed.");
+
         var opts = scope.ServiceProvider.GetRequiredService<IOptions<AdminSeedOptions>>().Value;
+
+        if (string.IsNullOrWhiteSpace(opts.Email) || string.IsNullOrWhiteSpace(opts.Password))
+        {
+            _logger.LogWarning("Admin seed skipped: Seed:Admin Email/Password not configured.");
+            return;
+        }
+
         var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
@@ -40,8 +51,16 @@ public sealed class StartupLoader : IHostedService
                 PasswordHash = hasher.Hash(opts.Password),
                 Role = UserRole.Admin
             });
+
+            _logger.LogInformation("Admin user created: {Email}", opts.Email);
+        }
+        else
+        {
+            _logger.LogInformation("Admin user already exists: {Email}", opts.Email);
         }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    
 }

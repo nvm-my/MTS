@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getInstruments } from "../../api/instruments.api";
 import { placeOrder } from "../../api/orders.api";
@@ -18,17 +18,43 @@ export default function PlaceOrderPage() {
 
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
   const [busy, setBusy] = useState(false);
+  const [loadingInst, setLoadingInst] = useState(false);
+
+  const selectedInstrument = useMemo(
+    () => instruments.find((i) => i.symbol === symbol) ?? null,
+    [instruments, symbol]
+  );
 
   useEffect(() => {
+    let mounted = true;
+
     (async () => {
-      const data = await getInstruments();
-      setInstruments(data);
-      if (data.length > 0) {
-        setSymbol(data[0].symbol);
-        setLimitPrice(data[0].lastPrice);
+      try {
+        setErr(null);
+        setLoadingInst(true);
+
+        const data = await getInstruments();
+        if (!mounted) return;
+
+        setInstruments(data);
+
+        if (data.length > 0) {
+          setSymbol(data[0].symbol);
+          setLimitPrice(data[0].lastPrice);
+        }
+      } catch (ex: any) {
+        if (!mounted) return;
+        setErr(ex?.response?.data?.error ?? "Failed to load instruments");
+      } finally {
+        if (mounted) setLoadingInst(false);
       }
     })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   function onSymbolChange(v: string) {
@@ -41,8 +67,21 @@ export default function PlaceOrderPage() {
     e.preventDefault();
     setErr(null);
     setMsg(null);
-    setBusy(true);
 
+    if (!symbol) {
+      setErr("Please select an instrument");
+      return;
+    }
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setErr("Quantity must be greater than 0");
+      return;
+    }
+    if (type === "Limit" && (!Number.isFinite(limitPrice) || limitPrice <= 0)) {
+      setErr("Limit price must be greater than 0");
+      return;
+    }
+
+    setBusy(true);
     try {
       const res = await placeOrder({
         symbol,
@@ -72,13 +111,22 @@ export default function PlaceOrderPage() {
         <div className="row">
           <div style={{ flex: 1, minWidth: 220 }}>
             <label>Instrument</label>
-            <select className="input" value={symbol} onChange={(e) => onSymbolChange(e.target.value)}>
+            <select
+              className="input"
+              value={symbol}
+              onChange={(e) => onSymbolChange(e.target.value)}
+              disabled={loadingInst || instruments.length === 0}
+            >
               {instruments.map((i) => (
                 <option key={i.id} value={i.symbol}>
                   {i.symbol} — {i.name} (Last: {i.lastPrice})
                 </option>
               ))}
             </select>
+            {loadingInst && <div style={{ marginTop: 6 }}>Loading instruments...</div>}
+            {!loadingInst && instruments.length === 0 && (
+              <div style={{ marginTop: 6, color: "crimson" }}>No instruments available</div>
+            )}
           </div>
 
           <div style={{ width: 160 }}>
@@ -132,12 +180,24 @@ export default function PlaceOrderPage() {
               />
             </div>
           )}
+
+          {/* optional hint, no UI change required */}
+          {type === "Limit" && selectedInstrument && (
+            <div style={{ alignSelf: "flex-end", marginLeft: 8, opacity: 0.8 }}>
+              Last: {selectedInstrument.lastPrice}
+            </div>
+          )}
         </div>
 
         {err && <div style={{ marginTop: 10, color: "crimson" }}>{err}</div>}
         {msg && <div style={{ marginTop: 10, color: "green" }}>{msg}</div>}
 
-        <button className="btn" style={{ marginTop: 14 }} type="submit" disabled={busy}>
+        <button
+          className="btn"
+          style={{ marginTop: 14 }}
+          type="submit"
+          disabled={busy || loadingInst || instruments.length === 0}
+        >
           {busy ? "Placing..." : "Place Order"}
         </button>
       </form>
