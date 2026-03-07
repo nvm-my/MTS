@@ -9,16 +9,38 @@ public static class SeedData
     {
         var collection = database.GetCollection<Instrument>("Instruments");
 
-        var count = await collection.CountDocumentsAsync(_ => true);
-        if (count > 0) return;
-
         var instruments = new List<Instrument>
         {
-            new Instrument { Symbol = "AAPL", Name = "Apple Inc." },
-            new Instrument { Symbol = "MSFT", Name = "Microsoft Corp." },
-            new Instrument { Symbol = "BTCUSD", Name = "Bitcoin / USD" }
+            new() { Symbol = "GP", Name = "Grameenphone Ltd." },
+            new() { Symbol = "BATBC", Name = "British American Tobacco Bangladesh" },
+            new() { Symbol = "BEXIMCO", Name = "Beximco Ltd." },
+            new() { Symbol = "SQURPHARMA", Name = "Square Pharmaceuticals Ltd." },
+            new() { Symbol = "RENATA", Name = "Renata Ltd." },
+            new() { Symbol = "BRACBANK", Name = "BRAC Bank Ltd." },
+            new() { Symbol = "CITYBANK", Name = "The City Bank Ltd." },
+            new() { Symbol = "DUTCHBANGL", Name = "Dutch-Bangla Bank Ltd." },
+            new() { Symbol = "IFIC", Name = "IFIC Bank Ltd." },
+            new() { Symbol = "PUBALIBANK", Name = "Pubali Bank Ltd." },
+            new() { Symbol = "OLYMPIC", Name = "Olympic Industries Ltd." },
+            new() { Symbol = "ACI", Name = "Advanced Chemical Industries Ltd." },
+            new() { Symbol = "ACIFORMULA", Name = "ACI Formulations Ltd." },
+            new() { Symbol = "ACMELAB", Name = "ACME Laboratories Ltd." },
+            new() { Symbol = "IBNSINA", Name = "Ibn Sina Pharmaceutical Ltd." },
+            new() { Symbol = "MARICO", Name = "Marico Bangladesh Ltd." },
+            new() { Symbol = "POWERGRID", Name = "Power Grid Company of Bangladesh Ltd." },
+            new() { Symbol = "SUMITPOWER", Name = "Summit Power Ltd." },
+            new() { Symbol = "BSRMLTD", Name = "BSRM Ltd." },
+            new() { Symbol = "WALTONHIL", Name = "Walton Hi-Tech Industries Ltd." }
         };
 
-        await collection.InsertManyAsync(instruments);
+        foreach (var ins in instruments)
+        {
+            var filter = Builders<Instrument>.Filter.Eq(x => x.Symbol, ins.Symbol);
+            var update = Builders<Instrument>.Update
+                .Set(x => x.Symbol, ins.Symbol)
+                .Set(x => x.Name, ins.Name);
+
+            await collection.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
+        }
     }
 }

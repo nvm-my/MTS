@@ -6,6 +6,10 @@ namespace TradingSim.Api.Controllers;
 
 [ApiController]
 [Route("auth")]
+
+//http://localhost:5000/auth/signup
+
+
 public sealed class AuthController : ControllerBase
 {
     private readonly SignupUseCase _signup;
