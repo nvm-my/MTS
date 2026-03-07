@@ -17,6 +17,60 @@ MTS/
 
 ---
 
+## Task Steps
+
+This project is built incrementally through the following stages:
+
+| # | Step | Description |
+|---|------|-------------|
+| 1 | **Basic App with SE-related Features** | Scaffold the core application with software-engineering fundamentals: domain models, repository pattern, error handling, logging, and in-memory data store |
+| 2 | **Backend with API** | Implement the ASP.NET Core REST API with Clean Architecture (Domain → Application → Infrastructure → API layers), EF Core persistence, JWT authentication, and OpenAPI documentation |
+| 3 | **Frontend with React** | Build the React 19 + TypeScript SPA: trading dashboard, order management UI, real-time charts via SignalR, and end-to-end integration with the backend API |
+| 4 | **Mobile with React Native** | Develop a React Native application (iOS & Android) that consumes the same REST API, sharing business logic and types with the web frontend |
+| 5 | **Load Testing** | Stress-test the API with [k6](https://k6.io/) (or [Apache JMeter](https://jmeter.apache.org/)) to identify throughput limits and latency bottlenecks under realistic trading workloads |
+| 6 | **Security Testing** | Run static-analysis (CodeQL / Semgrep), dependency auditing (`dotnet list package --vulnerable`, `npm audit`), and dynamic scanning (OWASP ZAP) against the API to surface and remediate vulnerabilities |
+| 7 | **Batch and Background Processing** | Introduce background workers (ASP.NET Core `IHostedService` / Hangfire) for scheduled tasks: price-feed ingestion, end-of-day P&L calculation, and report generation |
+| 8 | **Deployment and Migration** | Containerise with Docker, orchestrate with Kubernetes (Helm charts), automate schema migrations with EF Core, and deliver a full CI/CD pipeline on GitHub Actions |
+
+---
+
+## Development Principles
+
+All contributions to this codebase must adhere to the following principles:
+
+### 1 · Clean Coding
+Write code that is readable, simple, and self-explanatory. Functions and methods should do one thing, be short, and avoid side-effects. Prefer clarity over cleverness.
+
+### 2 · Naming Conventions
+Use consistent, intention-revealing names throughout:
+- **C#**: `PascalCase` for types and public members; `camelCase` for local variables and parameters; `_camelCase` for private fields.
+- **TypeScript / React**: `PascalCase` for components and types; `camelCase` for variables and functions; `UPPER_SNAKE_CASE` for constants.
+- **Branches**: `feat/`, `fix/`, `chore/`, `docs/` prefixes following [Conventional Commits](https://www.conventionalcommits.org/).
+
+### 3 · Proper Documentation
+- Every public API endpoint must include XML doc-comments (C#) / JSDoc (TypeScript) and be reflected in the OpenAPI spec.
+- Non-obvious logic must have an explanatory comment stating *why*, not just *what*.
+- Keep `README.md` and architecture diagrams up-to-date with every significant change.
+
+### 4 · Version Management
+- Follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
+- Maintain a `CHANGELOG.md` generated from [Conventional Commits](https://www.conventionalcommits.org/).
+- Protect the `main` branch: all changes must arrive via pull request with passing CI.
+
+### 5 · DRY Principle (Don't Repeat Yourself)
+Extract shared logic into reusable services, utilities, or base classes. Avoid copy-pasting code across layers or projects; instead, create a shared library or a common abstraction.
+
+### 6 · SOLID Principles
+| Principle | Application in this project |
+|-----------|----------------------------|
+| **S** — Single Responsibility | Each class / component has exactly one reason to change (e.g., `OrderService` only handles order business logic) |
+| **O** — Open / Closed | Extend behaviour through new implementations of interfaces rather than modifying existing code |
+| **L** — Liskov Substitution | Derived classes / interface implementations must be fully substitutable for their base types |
+| **I** — Interface Segregation | Define narrow, focused interfaces (e.g., separate `IOrderReader` and `IOrderWriter`) instead of one large interface |
+| **D** — Dependency Inversion | High-level modules depend on abstractions (interfaces), not on concrete implementations; use the DI container to wire dependencies |
+
+---
+
 ## Quick Start
 
 ### Prerequisites
