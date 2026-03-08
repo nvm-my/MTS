@@ -7,7 +7,7 @@ public static class SeedData
 {
     public static async Task SeedAsync(IMongoDatabase database)
     {
-        var collection = database.GetCollection<Instrument>("Instruments");
+        var collection = database.GetCollection<Instrument>("instruments");
 
         var instruments = new List<Instrument>
         {

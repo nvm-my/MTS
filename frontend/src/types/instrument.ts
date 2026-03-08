@@ -10,6 +10,7 @@ export type CreateInstrumentRequest = {
   symbol: string;
   name: string;
   lastPrice: number;
+  maxQuantity: number;
 };
 
 export type CreateInstrumentResponse = {
