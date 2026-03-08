@@ -37,12 +37,17 @@ public static class SeedData
         foreach (var ins in instruments)
         {
             var filter = Builders<Instrument>.Filter.Eq(x => x.Symbol, ins.Symbol);
+            var existing = await collection.Find(filter).FirstOrDefaultAsync();
+
+            var qty = existing != null && existing.MaxQuantity > 0 ? existing.MaxQuantity : rnd.Next(1000, 10000);
+            var price = existing != null && existing.LastPrice > 0 ? existing.LastPrice : Math.Round((decimal)(rnd.NextDouble() * 450 + 50), 2);
+
             var update = Builders<Instrument>.Update
                 .Set(x => x.Symbol, ins.Symbol)
                 .Set(x => x.Name, ins.Name)
-                .SetOnInsert(x => x.LastPrice, Math.Round((decimal)(rnd.NextDouble() * 450 + 50), 2))
-                .SetOnInsert(x => x.MaxQuantity, rnd.Next(1000, 100000))
-                .SetOnInsert(x => x.UpdatedUtc, DateTime.UtcNow);
+                .Set(x => x.LastPrice, price)
+                .Set(x => x.MaxQuantity, qty)
+                .Set(x => x.UpdatedUtc, DateTime.UtcNow);
 
             await collection.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
         }

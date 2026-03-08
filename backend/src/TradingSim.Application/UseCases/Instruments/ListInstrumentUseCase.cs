@@ -21,7 +21,8 @@ public sealed class ListInstrumentsUseCase
             Id = i.Id,
             Symbol = i.Symbol,
             Name = i.Name,
-            LastPrice = i.LastPrice
+            LastPrice = i.LastPrice,
+            MaxQuantity = i.MaxQuantity
         }).ToList();
     }
 }
