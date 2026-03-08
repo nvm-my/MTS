@@ -6,7 +6,7 @@ import { setAuth } from "../../app/auth.store";
 export default function LoginPage() {
   const nav = useNavigate();
 
-  const [email, setEmail] = useState("admin@demo.com");
+  const [email, setEmail] = useState("admin@tradingsim.com");
   const [password, setPassword] = useState("Admin@12345");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

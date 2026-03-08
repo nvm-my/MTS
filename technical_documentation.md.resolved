@@ -1,0 +1,54 @@
+# Mini Trading Platform - Technical Documentation
+
+## 1. Overview
+The Mini Trading Platform is a full-stack centralized exchange application. It allows users to register, view financial instruments, place simulated trading orders (buy/sell), and see their orders matched against other users' orders in real-time.
+
+## 2. Technology Stack
+*   **Frontend**: React, TypeScript, Vite
+*   **Backend**: .NET 10, ASP.NET Core Web API
+*   **Database**: MongoDB
+*   **Architecture**: Domain-Driven Design (Clean Architecture) divided into `Domain`, `Application`, [Infrastructure](file:///e:/MTS/backend/src/TradingSim.Infrastructure/DependencyInjection.cs#16-43), and `Api` layers.
+
+## 3. Platform Services & Feature List
+
+### For Clients (Traders)
+*   **User Authentication**: Secure sign-up and login mechanisms with encrypted credentials.
+*   **Market Exploration**: View available trading instruments (e.g., AAPL, BTC) dynamically loaded from the database.
+*   **Order Management**:
+    *   **Place Orders**: Submit Limit or Market orders indicating the side (Buy/Sell), quantity, and price.
+    *   **Time-In-Force Management**: Support for `Day` and `GTC` (Good Till Canceled) order duration instructions.
+    *   **View Open Orders**: Access a dedicated view tracking active/pending orders.
+    *   **Cancel Orders**: Revoke unfilled resting limit orders directly from the platform.
+*   **Trade History**: Review personal history of executed trades (completely or partially filled).
+
+### For Administrators
+*   **Instrument Management**: Create and seed new tradable instruments into the platform.
+*   **Global Logging**: View aggregate activity, including all platform-wide trades.
+
+## 4. Architectural Components
+
+### 4.1 Security & Authentication
+*   **Password Hashing**: Employs PBKDF2 with HMAC-SHA256, alongside a globally unique 16-byte random salt per user.
+*   **JWT Authorization**: Issues stateless JSON Web Tokens upon successful login, verifying roles (`Admin` or `Client`) on restricted endpoints using standard .NET API Authorize attributes.
+
+### 4.2 Matching Engine (Core Business Logic)
+The heart of the trading simulation is the **Matching Engine**, implemented as a singleton in-memory service ([MatchingEngine.cs](file:///e:/MTS/backend/src/TradingSim.Domain/Matching/MatchingEngine.cs)).
+*   **Order Book Tracking**: It maintains an isolated order book for each unique symbol utilizing a `Dictionary<string, OrderBook>`.
+*   **Processing Rules**:
+    *   Incoming **Market** orders are matched immediately against the highest opposing bids or lowest asks. Unfilled portions are canceled.
+    *   Incoming **Limit** orders define a strict price boundary. If no matching offset rests on the book, the order joins the resting liquidity pool in the book.
+    *   Partial Fills adjust the `RemainingQuantity`. When an order is fully filled, its status transitions to `Filled`, and it is dismissed from the book.
+*   **Trade Generation**: Intersecting orders spawn [Trade](file:///e:/MTS/backend/src/TradingSim.Domain/Matching/MatchingEngine.cs#124-141) execution records noting the matched price, transferred quantity, and buyer/seller identities.
+
+### 4.3 Persistence Layer
+The [Infrastructure](file:///e:/MTS/backend/src/TradingSim.Infrastructure/DependencyInjection.cs#16-43) tier maps Repository interfaces (`IUserRepository`, `IOrderRepository`, etc.) to actual MongoDB collections.
+*   **Startup Loader & Seeding**: A hosted service ([StartupLoader.cs](file:///e:/MTS/backend/src/TradingSim.Infrastructure/Seed/StartupLoader.cs)) automates the system's initialization. It connects to the MongoDB daemon to re-load active pending orders directly into the in-memory matching engine and injects the baseline instruments (and an Admin identity) if nonexistent.
+
+## 5. Process Flow: The Order Lifecycle
+
+1.  **Submission**: Client navigates to the frontend portal (Vite), configures a trade, and fires a request to `/orders`. The request contains an Authorization Header bearer token.
+2.  **API Routing**: ASP.NET Core intercepts the payload, validates the JWT, constructs a `PlaceOrderUseCase` model, and passes it to the `Application` layer.
+3.  **Entity Validation**: Business rules govern whether the user possesses adequate bounds to place the order.
+4.  **Matching**: The `PlaceOrderUseCase` invokes the singleton [MatchingEngine](file:///e:/MTS/backend/src/TradingSim.Domain/Matching/MatchingEngine.cs#6-142), checking the specific symbol's resting `OrderBook`.
+5.  **Execution**: Upon successful crossover, [Trade](file:///e:/MTS/backend/src/TradingSim.Domain/Matching/MatchingEngine.cs#124-141) objects are instantiated. The engine persists these executions and updates the [Order](file:///e:/MTS/backend/src/TradingSim.Domain/Matching/MatchingEngine.cs#11-23) states (e.g., PartiallyFilled, Filled, Cancelled) inside the MongoDB collections via Repositories.
+6.  **Response**: The newly determined state cascades back out to the API controller, answering the client with an HTTP 200/Okay signal mapping the executed quantity.
