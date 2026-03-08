@@ -23,6 +23,7 @@ export default function AdminDashboard() {
           <Link to="/">Instruments (client view)</Link>
           <Link to="/admin/instruments">Manage Instruments</Link>
           <Link to="/admin/trades">All Trades</Link>
+          <Link to="/admin/power">Review Deposits</Link>
         </div>
       </div>
 

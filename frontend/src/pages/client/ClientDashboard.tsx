@@ -51,15 +51,21 @@ export default function ClientDashboard() {
 
       <div className="card">
         <div className="row">
-          <Link to="/client/place-order">Place Order</Link>
-          <Link to="/client/orders">My Open Orders</Link>
-          <Link to="/client/trades">My Trades</Link>
+          {role === "Client" && (
+            <>
+              <Link to="/client/place-order">Place Order</Link>
+              <Link to="/client/orders">My Open Orders</Link>
+              <Link to="/client/trades">My Trades</Link>
+              <Link to="/client/power">Deposit Balance</Link>
+            </>
+          )}
 
           {role === "Admin" && (
             <>
               <Link to="/admin">Admin Home</Link>
               <Link to="/admin/instruments">Manage Instruments</Link>
               <Link to="/admin/trades">All Trades</Link>
+              <Link to="/admin/power">Review Deposits</Link>
             </>
           )}
         </div>
@@ -77,6 +83,7 @@ export default function ClientDashboard() {
               <th>Symbol</th>
               <th>Name</th>
               <th>Last Price</th>
+              <th>Max Qty</th>
             </tr>
           </thead>
           <tbody>
@@ -87,6 +94,7 @@ export default function ClientDashboard() {
                 </td>
                 <td>{x.name}</td>
                 <td>{x.lastPrice}</td>
+                <td>{x.maxQuantity}</td>
               </tr>
             ))}
           </tbody>
