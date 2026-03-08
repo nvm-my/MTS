@@ -51,10 +51,14 @@ export default function ClientDashboard() {
 
       <div className="card">
         <div className="row">
-          <Link to="/client/place-order">Place Order</Link>
-          <Link to="/client/orders">My Open Orders</Link>
-          <Link to="/client/trades">My Trades</Link>
-          <Link to="/client/power">Deposit Balance</Link>
+          {role === "Client" && (
+            <>
+              <Link to="/client/place-order">Place Order</Link>
+              <Link to="/client/orders">My Open Orders</Link>
+              <Link to="/client/trades">My Trades</Link>
+              <Link to="/client/power">Deposit Balance</Link>
+            </>
+          )}
 
           {role === "Admin" && (
             <>
